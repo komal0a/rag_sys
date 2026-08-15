@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 # Ensure backend package is importable when pytest runs from workspace root
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.main import app
+from app.main import create_app
 from app import models
 from app.deps import get_db
 
@@ -31,10 +31,12 @@ def override_get_db():
         db.close()
 
 
+app = create_app()
+
 # Create tables for tests
 models.Base.metadata.create_all(bind=engine)
 
-# Override the dependency
+# Override the dependency on this app instance
 app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)

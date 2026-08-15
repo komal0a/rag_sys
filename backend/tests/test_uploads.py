@@ -8,7 +8,7 @@ from pathlib import Path
 # Ensure backend package importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.main import app
+from app.main import create_app
 from app import models
 from app.deps import get_db
 from sqlalchemy import create_engine
@@ -28,6 +28,8 @@ def override_get_db():
     finally:
         db.close()
 
+
+app = create_app()
 
 models.Base.metadata.create_all(bind=engine)
 app.dependency_overrides[get_db] = override_get_db

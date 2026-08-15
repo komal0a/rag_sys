@@ -7,3 +7,5 @@ SQLAlchemy==2.0.52
 alembic==1.19.1
 python-multipart==0.0.6
 PyJWT==2.8.0
+PyPDF2==3.0.0
+reportlab==3.6.12

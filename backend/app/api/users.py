@@ -6,6 +6,7 @@ try:
 except Exception:  # pragma: no cover - fallback for environments without email-validator
     EmailStr = str
 from app.deps import get_db
+from app.core.security import hash_password
 from app import models
 
 router = APIRouter()
@@ -21,7 +22,8 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.User).filter(models.User.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    user = models.User(email=payload.email, hashed_password=payload.password)
+    hp = hash_password(payload.password)
+    user = models.User(email=payload.email, hashed_password=hp)
     db.add(user)
     db.commit()
     db.refresh(user)

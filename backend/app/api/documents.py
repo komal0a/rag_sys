@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.deps import get_db, get_current_user
@@ -6,6 +6,7 @@ from app import models
 from app.core.config import settings
 from uuid import uuid4
 import os
+from app.services.ingest import process_document
 
 
 def _secure_filename(name: str) -> str:
@@ -32,7 +33,7 @@ def create_document(payload: DocumentCreate, db: Session = Depends(get_db), curr
 
 
 @router.post("/upload", response_model=dict)
-def upload_document(file: UploadFile = File(...), db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def upload_document(file: UploadFile = File(...), background_tasks: BackgroundTasks = None, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     # Validate content type and extension
     filename = file.filename or "upload"
     if not filename.lower().endswith(".pdf"):
@@ -67,7 +68,9 @@ def upload_document(file: UploadFile = File(...), db: Session = Depends(get_db),
     db.add(doc)
     db.commit()
     db.refresh(doc)
-    return {"id": doc.id, "filename": doc.filename, "original_filename": doc.original_filename}
+    # schedule background ingestion
+    background_tasks.add_task(process_document, doc.id, current_user.id)
+    return {"id": doc.id, "filename": doc.filename, "original_filename": doc.original_filename, "status": doc.status}
 
 
 @router.get("/{doc_id}", response_model=dict)

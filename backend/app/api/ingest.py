@@ -26,9 +26,7 @@ def ingest_document(document_id: int, db: Session = Depends(get_db), credentials
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
     # Fetch document by id and verify ownership
-    print(f"[DEBUG] token user_id={user_id}")
     doc = db.get(models.Document, document_id)
-    print(f"[DEBUG] doc found={bool(doc)} doc.user_id={(getattr(doc,'user_id',None) if doc else None)}")
     if not doc or str(doc.user_id) != str(user_id):
         raise HTTPException(status_code=404, detail="Document not found")
     if not doc.file_path or not os.path.exists(doc.file_path):

@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, func, JSON, Index
+import os
 from sqlalchemy.orm import relationship, declarative_base
 import os
 
@@ -43,8 +44,15 @@ class DocumentChunk(Base):
     # Use `meta` as the Python attribute name to avoid conflict with SQLAlchemy's
     # Declarative API while keeping the DB column name `metadata`.
     meta = Column('metadata', JSON, nullable=True)
-    # Embeddings column: use JSON fallback for SQLite, pgvector in Postgres environments
-    embedding = Column(JSON, nullable=True)
+    # Embeddings column: use pgvector.Vector when available (Postgres),
+    # otherwise fall back to JSON for SQLite/testing environments.
+    try:
+        from pgvector.sqlalchemy import Vector
+
+        EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", 8))
+        embedding = Column(Vector(EMBEDDING_DIM), nullable=True)
+    except Exception:
+        embedding = Column(JSON, nullable=True)
 
     document = relationship("Document", backref="chunks")
 

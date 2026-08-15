@@ -3,6 +3,10 @@ venv/
 env/
 .env
 node_modules/
+dev.db
+dev_migration.db
+dev_migration_from_0001.db
+storage/
 dist/
 build/
 .pytest_cache/
@@ -11,6 +15,7 @@ __pycache__/
 .vscode/
 .idea/
 /.docker
+
 *.pyc
 *.pyo
 *.pyd

@@ -19,10 +19,16 @@ class Document(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     filename = Column(String(1024), nullable=False)
     num_pages = Column(Integer, nullable=True)
+    original_filename = Column(String(1024), nullable=True)
+    file_path = Column(String(2048), nullable=True)
+    content_type = Column(String(255), nullable=True)
+    file_size = Column(Integer, nullable=True)
+    status = Column(String(50), nullable=False, server_default="uploaded")
     # 'metadata' is a reserved attribute name on declarative base; use Python-side
     # attribute `meta` while keeping the DB column name `metadata` for compatibility.
     meta = Column('metadata', JSON, nullable=True)
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     owner = relationship("User", backref="documents")
 

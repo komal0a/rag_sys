@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.requests import Request
+from fastapi.middleware.cors import CORSMiddleware
 from .api.health import router as health_router
 from .api.users import router as users_router
 from .api.documents import router as documents_router
@@ -14,6 +15,17 @@ import os
 
 def create_app() -> FastAPI:
     app = FastAPI(title="RAG Platform Backend")
+    
+    # Configure CORS
+    frontend_url = settings.FRONTEND_URL
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[frontend_url],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
     # Generic exception handlers to avoid leaking internals
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):

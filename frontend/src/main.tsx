@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 
-const API = (path: string, opts: any = {}) => fetch(path, {
-  credentials: 'same-origin',
-  headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) },
-  ...opts,
-}).then(r => r.json().catch(()=> ({})).then(b => ({status: r.status, body: b})))
+// Get API URL from environment variable or default to relative path for development
+const API_URL = import.meta.env.VITE_API_URL || ''
+
+const API = (path: string, opts: any = {}) => {
+  const url = API_URL ? `${API_URL}${path}` : path
+  return fetch(url, {
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) },
+    ...opts,
+  }).then(r => r.json().catch(()=> ({})).then(b => ({status: r.status, body: b})))
+}
 
 function App(){
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))

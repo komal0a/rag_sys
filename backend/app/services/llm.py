@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import os
+import logging
 from typing import List, Dict, Any, Protocol, runtime_checkable, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @runtime_checkable
@@ -39,9 +42,13 @@ class OpenAIProvider:
         self.model = model or os.environ.get("LLM_MODEL", "gpt-4o-mini")
 
     def generate(self, prompt: str, max_tokens: int = 256) -> str:
-        response = self.client.responses.create(
-            model=self.model, input=prompt, max_output_tokens=max_tokens
-        )
+        try:
+            response = self.client.responses.create(
+                model=self.model, input=prompt, max_output_tokens=max_tokens
+            )
+        except Exception:
+            logger.exception("OpenAI Responses API request failed")
+            raise
         return response.output_text.strip()
 
 

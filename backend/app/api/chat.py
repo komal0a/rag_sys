@@ -44,8 +44,8 @@ def chat(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(g
         f"QUESTION: {req.query}\n\nCONTEXT:\n{context}\n"
     )
 
-    llm = get_provider()
     try:
+        llm = get_provider()
         answer = llm.generate(prompt)
     except Exception:
         raise HTTPException(status_code=502, detail="LLM provider error")

@@ -29,7 +29,10 @@ def create_app() -> FastAPI:
     # Generic exception handlers to avoid leaking internals
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
-        return JSONResponse(status_code=422, content={"detail": "Invalid request"})
+        return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()}
+    )
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):

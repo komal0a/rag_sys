@@ -39,15 +39,16 @@ class Retriever:
         try:
             # Use Postgres `vector` operator: <-> for Euclidean, <=> for cosine
             # We will use cosine distance via the `<=>` operator if available.
-            sql = "SELECT id, document_id, content, page_number, embedding <=> :qemb AS distance FROM document_chunks"
+            sql = "SELECT id, document_id, content, page_number, embedding <=> CAST(:qemb AS vector) AS distance FROM document_chunks"
             where_clauses = []
-            params = {"qemb": qemb}
+            qemb_str = "[" + ",".join(map(str, qemb)) + "]"
+            params = {"qemb": qemb_str}
             if document_id:
                 where_clauses.append("document_id = :document_id")
                 params["document_id"] = document_id
             if user_id:
                 # join documents to enforce ownership
-                sql = "SELECT dc.id, dc.document_id, dc.content, dc.page_number, dc.embedding <=> :qemb AS distance FROM document_chunks dc JOIN documents d ON dc.document_id = d.id"
+                sql = "SELECT dc.id, dc.document_id, dc.content, dc.page_number, dc.embedding <=> CAST(:qemb AS vector) AS distance FROM document_chunks dc JOIN documents d ON dc.document_id = d.id"
                 where_clauses.append("d.user_id = :user_id")
                 params["user_id"] = user_id
             if where_clauses:
@@ -64,6 +65,7 @@ class Retriever:
                     results.append({"chunk_id": int(row[0]), "document_id": int(row[1]), "content": row[2], "page_number": row[3], "similarity": similarity})
             return {"query": query, "results": results, "timings": {"embed": getattr(self, "_embed_latency", None)}}
         except Exception:
+            self.db.rollback()
             # Fallback: load embeddings into Python and do cosine similarity
             # Note: this is only for test environments without pgvector.
             from math import sqrt

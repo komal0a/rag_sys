@@ -29,16 +29,20 @@ class FakeLLMProvider:
 class OpenAIProvider:
     def __init__(self, model: Optional[str] = None):
         try:
-            import openai
+            from openai import OpenAI
         except Exception as e:
             raise RuntimeError("openai package required for OpenAIProvider") from e
-        self.openai = openai
-        self.model = model or os.environ.get("LLM_MODEL", "gpt-3.5-turbo")
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY is required when LLM_PROVIDER=openai")
+        self.client = OpenAI(api_key=api_key)
+        self.model = model or os.environ.get("LLM_MODEL", "gpt-4o-mini")
 
     def generate(self, prompt: str, max_tokens: int = 256) -> str:
-        # minimal chat request
-        resp = self.openai.ChatCompletion.create(model=self.model, messages=[{"role": "user", "content": prompt}], max_tokens=max_tokens)
-        return resp["choices"][0]["message"]["content"].strip()
+        response = self.client.responses.create(
+            model=self.model, input=prompt, max_output_tokens=max_tokens
+        )
+        return response.output_text.strip()
 
 
 def get_provider() -> LLMProvider:

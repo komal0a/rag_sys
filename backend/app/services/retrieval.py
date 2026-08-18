@@ -81,7 +81,7 @@ class Retriever:
                     if c.document and c.document.user_id != user_id:
                         continue
                 emb = c.embedding
-                if not emb:
+                if emb is None:
                     continue
                 items.append((c, emb))
 

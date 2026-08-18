@@ -35,29 +35,29 @@ Services will be available at:
 
 ## Deployment Readiness
 
-**⚠️ IMPORTANT: Development vs Production**
+The Docker configuration uses local Ollama:
+- `OLLAMA_EMBEDDING_MODEL=nomic-embed-text` for semantic retrieval (768 dimensions)
+- `OLLAMA_MODEL=llama3.2:3b` for answer generation
 
-The default configuration uses:
-- `EMBEDDING_PROVIDER=fake` — deterministic stub for testing (NOT semantic search)
-- `LLM_PROVIDER=fake` — stub responses (NOT real answers)
+Pull both models before starting the backend:
 
-**With fake providers, this system CANNOT perform real RAG.** It's suitable only for development and testing.
+```bash
+ollama pull nomic-embed-text
+ollama pull llama3.2:3b
+```
 
 ### For Production Deployment
 
 The system is **production-ready architecturally** only when configured with:
 
 1. **Real Embedding Provider** (required for semantic search):
-   - `EMBEDDING_PROVIDER=openai`
-   - `OPENAI_API_KEY=sk-...` (from https://platform.openai.com/api-keys)
-   - `EMBEDDING_MODEL=text-embedding-3-small` or `text-embedding-3-large`
-   - `EMBEDDING_DIM` must match model (1536 for ada-002/3-small, 3072 for 3-large)
-   - Alternative providers: Hugging Face, Cohere, Azure (see [Backend Configuration](#backend-configuration))
+   - `EMBEDDING_PROVIDER=ollama`
+   - `OLLAMA_EMBEDDING_MODEL=nomic-embed-text`
+   - `EMBEDDING_DIM=768`
 
 2. **Real LLM Provider** (required for chat/Q&A):
-   - `LLM_PROVIDER=openai`
-   - `OPENAI_API_KEY=sk-...` (same account as embeddings)
-   - `LLM_MODEL=gpt-4-turbo` or `gpt-3.5-turbo` (see [Backend Configuration](#backend-configuration))
+   - `LLM_PROVIDER=ollama`
+   - `OLLAMA_MODEL=llama3.2:3b`
 
 3. **Verify providers are working:**
    ```bash
@@ -104,8 +104,10 @@ UPLOAD_DIR=/data/uploads
 MAX_UPLOAD_SIZE_MB=50
 
 # Optional: embeddings provider
-EMBEDDING_PROVIDER=fake  # or 'openai'
-EMBEDDING_DIM=384
+EMBEDDING_PROVIDER=ollama
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+EMBEDDING_DIM=768
 ```
 
 See `.env.example` for all available settings.
@@ -128,6 +130,10 @@ See `.env.example` for all available settings.
    ```bash
    docker-compose exec backend alembic upgrade head
    ```
+
+   If old 8-dimensional fake vectors exist, this migration deliberately stops
+   without changing data. Back up the database, explicitly remove the derived
+   `document_chunks` rows, rerun the migration, then re-ingest every source PDF.
 
 4. **Verify health:**
    ```bash
@@ -202,5 +208,5 @@ pytest -q
 
 **File upload issues:** Check UPLOAD_DIR permissions and UPLOAD_SIZE_MB limits.
 
-**Missing embeddings:** Ensure Postgres pgvector extension is installed (if using OpenAI provider).
+**Missing embeddings:** Run `ollama pull nomic-embed-text`, then ensure the pgvector migration has completed.
 

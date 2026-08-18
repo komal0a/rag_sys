@@ -10,11 +10,14 @@ from app import models
 
 router = APIRouter()
 
+DEFAULT_CHAT_TOP_K = 3
+MAX_CONTEXT_CHUNK_CHARS = 1500
+
 
 class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1)
     document_id: Optional[int] = None
-    top_k: Optional[int] = 5
+    top_k: Optional[int] = DEFAULT_CHAT_TOP_K
     conversation_id: Optional[int] = None
 
 
@@ -34,7 +37,9 @@ def chat(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(g
     context_lines = []
     for idx, r in enumerate(results, start=1):
         src = f"doc:{r['document_id']} chunk:{r['chunk_id']} page:{r.get('page_number') or ''}"
-        content = r.get('content', '').strip()
+        # Keep the response sources complete, but bound only the text sent to
+        # the local LLM so a few large chunks cannot cause Ollama timeouts.
+        content = r.get('content', '').strip()[:MAX_CONTEXT_CHUNK_CHARS]
         context_lines.append(f"[{idx}] SOURCE: {src}\n{content}")
     context = "\n\n".join(context_lines)
 

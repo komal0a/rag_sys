@@ -49,8 +49,11 @@ class DocumentChunk(Base):
     try:
         from pgvector.sqlalchemy import Vector
 
-        EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", 8))
-        embedding = Column(Vector(EMBEDDING_DIM), nullable=True)
+        if os.environ.get("DATABASE_URL", "").startswith("postgresql"):
+            EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", 768))
+            embedding = Column(Vector(EMBEDDING_DIM), nullable=True)
+        else:
+            embedding = Column(JSON, nullable=True)
     except Exception:
         embedding = Column(JSON, nullable=True)
 

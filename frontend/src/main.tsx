@@ -22,7 +22,7 @@ import {
   Brain,
 } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "";
+const API_URL = (import.meta as ImportMeta & { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || "";
 
 const API = async (path: string, opts: any = {}) => {
   const url = API_URL ? `${API_URL}${path}` : path;

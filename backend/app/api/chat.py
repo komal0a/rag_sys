@@ -10,8 +10,8 @@ from app import models
 
 router = APIRouter()
 
-DEFAULT_CHAT_TOP_K = 3
-MAX_CONTEXT_CHUNK_CHARS = 1500
+DEFAULT_CHAT_TOP_K = 5
+MAX_CONTEXT_CHUNK_CHARS = 3000
 
 
 class ChatRequest(BaseModel):
@@ -43,15 +43,44 @@ def chat(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(g
         context_lines.append(f"[{idx}] SOURCE: {src}\n{content}")
     context = "\n\n".join(context_lines)
 
-    prompt = (
-        "You are a helpful assistant. Answer using ONLY the provided context. "
-        "If the answer is not contained, respond: 'I don't have enough information to answer that.'\n"
-        f"QUESTION: {req.query}\n\nCONTEXT:\n{context}\n"
-    )
+    prompt = f"""
+    You are a document question-answering assistant.
+
+    Answer the user's question using ONLY the information in the CONTEXT.
+
+    IMPORTANT:
+    - Read ALL provided context before answering.
+    - Combine information from ALL relevant chunks.
+    - Do not stop after mentioning the first qualification.
+    - If the question asks for skills or qualifications, provide EVERY relevant skill and qualification found in the context.
+    - Do not use outside knowledge.
+    - Use clear headings and bullet points.
+    - Give a complete answer.
+    - Do not mention the retrieval process or chunks.
+
+    If the answer truly cannot be found in the context, say:
+    "I don't have enough information to answer that."
+
+    QUESTION:
+    {req.query}
+
+    CONTEXT:
+    {context}
+
+    ANSWER:
+    """
+
 
     try:
         llm = get_provider()
-        answer = llm.generate(prompt)
+        print("\n========== PROMPT SENT TO GEMINI ==========")
+        print(prompt)
+        print("========== END PROMPT ==========\n")
+        answer = llm.generate(prompt, max_tokens=1500)
+        print("\n========== GEMINI ANSWER ==========")
+        print(repr(answer))
+        print("ANSWER LENGTH:", len(answer))
+        print("========== END GEMINI ANSWER ==========\n")
     except Exception:
         raise HTTPException(status_code=502, detail="LLM provider error")
 

@@ -14,3 +14,4 @@ psycopg2-binary==2.9.9
 pgvector==0.3.6
 openai==1.109.1
 requests
+google-genai

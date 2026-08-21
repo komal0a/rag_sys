@@ -21,3 +21,5 @@ __pycache__/
 *.pyd
 /.env.local
 rag_db_backup.sql
+# Python virtual environment
+backend/.venv311/

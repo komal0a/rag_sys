@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+
+
+
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
-  ArrowUpRight,
   Upload,
   FileText,
   MessageSquare,
@@ -16,41 +18,39 @@ import {
   X,
   Send,
   Paperclip,
-  Check,
   ChevronRight,
   Database,
   Brain,
+  Settings,
+  Eye,
+  Trash2,
+  MoreHorizontal,
+  ThumbsUp,
+  ThumbsDown,
+  RotateCcw,
+  Copy,
+  ArrowLeft,
 } from "lucide-react";
 
-const API_URL = (import.meta as ImportMeta & { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || "";
+const API_URL =
+  (import.meta as ImportMeta & { env?: { VITE_API_URL?: string } }).env
+    ?.VITE_API_URL || "";
 
 const API = async (path: string, opts: any = {}) => {
   const url = API_URL ? `${API_URL}${path}` : path;
-
   try {
     const response = await fetch(url, {
       credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        ...(opts.headers || {}),
-      },
+      headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
       ...opts,
     });
-
     const body = await response.json().catch(() => ({}));
-
-    return {
-      status: response.status,
-      body,
-    };
+    return { status: response.status, body };
   } catch (error) {
     console.error("API request failed:", error);
-
     return {
       status: 0,
-      body: {
-        detail: "Unable to connect to backend server",
-      },
+      body: { detail: "Unable to connect to backend server" },
     };
   }
 };
@@ -59,46 +59,236 @@ const cream = "#E1E0CC";
 const darkCard = "#101010";
 const lighterCard = "#171717";
 const border = "rgba(225,224,204,0.10)";
-
 const ease = [0.16, 1, 0.3, 1] as const;
 
-function Reveal({
-  children,
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  delay?: number;
-}) {
+/* ================= BEE ================= */
+
+function BeeIcon({ size = 20 }: { size?: number }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 25 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.8, delay, ease }}
-    >
-      {children}
-    </motion.div>
+    <svg width={size} height={size} viewBox="0 0 32 32">
+      <ellipse
+        cx="17"
+        cy="12"
+        rx="8"
+        ry="6"
+        fill="rgba(225,224,204,.5)"
+        transform="rotate(-18 17 12)"
+      />
+      <ellipse
+        cx="19"
+        cy="9"
+        rx="7"
+        ry="5.4"
+        fill="rgba(225,224,204,.35)"
+        transform="rotate(-8 19 9)"
+      />
+      <ellipse cx="16" cy="17" rx="9" ry="6.5" fill="#F2B23A" />
+      <path
+        d="M9 13.5h14M8.5 17h15M10 20.5h12"
+        stroke="#111"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="24.5" cy="14" r="1.6" fill="#111" />
+    </svg>
   );
 }
+
+function BeeTrail() {
+  return (
+    <svg
+      width={100}
+      height={60}
+      viewBox="0 0 100 60"
+      style={{ position: "absolute", top: 14, right: 14, opacity: 0.8 }}
+    >
+      <path
+        d="M8 45 Q35 50 45 30 T80 18"
+        stroke="#F2B23A"
+        strokeWidth="1.2"
+        strokeDasharray="2 4"
+        fill="none"
+        opacity=".5"
+      />
+      <g transform="translate(74,6)">
+        <BeeIcon size={22} />
+      </g>
+    </svg>
+  );
+}
+
+function CursorBee() {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  const target = useRef({ x: -100, y: -100 });
+  const cur = useRef({ x: -100, y: -100 });
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      target.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", move);
+    let raf: number;
+    const tick = (t: number) => {
+      cur.current.x += (target.current.x - cur.current.x) * 0.1;
+      cur.current.y += (target.current.y - cur.current.y) * 0.1;
+      setPos({ x: cur.current.x, y: cur.current.y + Math.sin(t / 350) * 5 });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left: pos.x,
+        top: pos.y,
+        transform: "translate(-50%,-60%) rotate(-15deg)",
+        pointerEvents: "none",
+        zIndex: 9999,
+      }}
+    >
+      <BeeIcon size={22} />
+    </div>
+  );
+}
+
+/* ================= LOGIN ================= */
+
+function LoginPage({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  isRegister,
+  setIsRegister,
+  login,
+  register,
+}: any) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#000",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 430,
+          background: "#0c0c0c",
+          border: `1px solid ${border}`,
+          borderRadius: 28,
+          padding: 34,
+          position: "relative",
+        }}
+      >
+        <BeeTrail />
+        <div style={smallLabel}>
+          NEXUS<span className="serif">*</span>
+        </div>
+        <h1
+          style={{
+            fontSize: 40,
+            fontWeight: 400,
+            letterSpacing: "-.05em",
+            margin: "22px 0 8px",
+          }}
+        >
+          {isRegister ? "Create your" : "Welcome"}
+          <br />
+          <span className="serif">{isRegister ? "account." : "back."}</span>
+        </h1>
+        <p
+          style={{
+            color: "rgba(225,224,204,.45)",
+            fontSize: 13,
+            marginBottom: 28,
+          }}
+        >
+          {isRegister
+            ? "Sign up for your document intelligence workspace."
+            : "Sign in to your document intelligence workspace."}
+        </p>
+
+        <div style={fieldLabel}>EMAIL</div>
+        <input
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={authInput}
+        />
+
+        <div style={{ ...fieldLabel, marginTop: 16 }}>PASSWORD</div>
+        <input
+          placeholder="••••••••••••"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={authInput}
+        />
+
+        <button
+          onClick={isRegister ? register : login}
+          style={{
+            ...primaryButton,
+            width: "100%",
+            justifyContent: "space-between",
+            marginTop: 22,
+          }}
+        >
+          {isRegister ? "Create account" : "Sign in"}
+          <span style={buttonCircle}>
+            <ArrowRight size={16} />
+          </span>
+        </button>
+
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: 16,
+            fontSize: 12,
+            color: "rgba(225,224,204,.4)",
+          }}
+        >
+          {isRegister ? "Already have an account? " : "Don't have an account? "}
+          <a
+            onClick={() => setIsRegister(!isRegister)}
+            style={{
+              color: cream,
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
+          >
+            {isRegister ? "Sign in" : "Create account"}
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= APP ================= */
 
 function App() {
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("token"),
   );
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
 
   const [docs, setDocs] = useState<any[]>([]);
   const [file, setFile] = useState<File | null>(null);
-
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<any>(null);
-
   const [convs, setConvs] = useState<any[]>([]);
-
-  const [showWorkspace, setShowWorkspace] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -110,31 +300,21 @@ function App() {
     }
   }, [token]);
 
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   async function register() {
     if (!email.trim() || !password.trim()) {
       alert("Please enter email and password");
       return;
     }
-
     const r = await API("/auth/register", {
       method: "POST",
-      body: JSON.stringify({
-        email: email.trim(),
-        password,
-      }),
+      body: JSON.stringify({ email: email.trim(), password }),
     });
-
     if (r.status === 200) {
       alert("Registered successfully. You can now login.");
-    } else {
-      alert(r.body.detail || "Registration failed");
-    }
+      setIsRegister(false);
+    } else alert(r.body.detail || "Registration failed");
   }
 
   async function login() {
@@ -142,33 +322,28 @@ function App() {
       alert("Please enter email and password");
       return;
     }
-
     const r = await API("/auth/login", {
       method: "POST",
-      body: JSON.stringify({
-        email: email.trim(),
-        password,
-      }),
+      body: JSON.stringify({ email: email.trim(), password }),
     });
-
     if (r.status === 200 && r.body.access_token) {
       localStorage.setItem("token", r.body.access_token);
       setToken(r.body.access_token);
-      setShowAuth(false);
-      setShowWorkspace(true);
-    } else {
-      alert(r.body.detail || "Login failed");
-    }
+    } else alert(r.body.detail || "Login failed");
   }
 
   async function fetchDocs() {
-    const r = await API("/documents/", {
-      method: "GET",
-      headers,
-    });
-
+    const r = await API("/documents/", { method: "GET", headers });
     if (r.status === 200) {
-      setDocs(r.body);
+      const data = Array.isArray(r.body)
+        ? r.body
+        : Array.isArray(r.body?.documents)
+          ? r.body.documents
+          : [];
+      setDocs(data);
+    } else {
+      console.error("Failed to fetch documents:", r.body);
+      setDocs([]);
     }
   }
 
@@ -177,33 +352,21 @@ function App() {
       alert("Please choose a PDF file");
       return;
     }
-
     setUploading(true);
-
     const form = new FormData();
     form.append("file", file, file.name);
-
-    const url = API_URL
-      ? `${API_URL}/documents/upload`
-      : "/documents/upload";
-
+    const url = API_URL ? `${API_URL}/documents/upload` : "/documents/upload";
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
-
       const body = await response.json().catch(() => ({}));
-
       if (response.status === 200) {
         setFile(null);
         await fetchDocs();
-      } else {
-        alert(body.detail || "Upload failed");
-      }
+      } else alert(body.detail || "Upload failed");
     } catch (error) {
       console.error(error);
       alert("Unable to connect to backend");
@@ -214,22 +377,10 @@ function App() {
 
   async function ask(docId?: number) {
     const cleanQuery = query.trim();
-
-    if (!cleanQuery) {
-      return;
-    }
-
+    if (!cleanQuery) return;
     setLoading(true);
-
-    const payload: any = {
-      query: cleanQuery,
-      top_k: 5,
-    };
-
-    if (docId !== undefined) {
-      payload.document_id = docId;
-    }
-
+    const payload: any = { query: cleanQuery, top_k: 5 };
+    if (docId !== undefined) payload.document_id = docId;
     const r = await API("/chat", {
       method: "POST",
       headers: {
@@ -238,35 +389,30 @@ function App() {
       },
       body: JSON.stringify(payload),
     });
-
     if (r.status === 200) {
       setAnswer(r.body);
       await fetchConvs();
     } else {
       const detail = r.body?.detail;
-
-      if (Array.isArray(detail)) {
-        alert(
-          detail
-            .map((error: any) => error.msg || JSON.stringify(error))
-            .join("\n"),
-        );
-      } else {
-        alert(detail || `Request failed with status ${r.status}`);
-      }
+      if (Array.isArray(detail))
+        alert(detail.map((e: any) => e.msg || JSON.stringify(e)).join("\n"));
+      else alert(detail || `Request failed with status ${r.status}`);
     }
-
     setLoading(false);
   }
 
   async function fetchConvs() {
-    const r = await API("/conversations", {
-      method: "GET",
-      headers,
-    });
-
+    const r = await API("/conversations", { method: "GET", headers });
     if (r.status === 200) {
-      setConvs(r.body);
+      const data = Array.isArray(r.body)
+        ? r.body
+        : Array.isArray(r.body?.conversations)
+          ? r.body.conversations
+          : [];
+      setConvs(data);
+    } else {
+      console.error("Failed to fetch conversations:", r.body);
+      setConvs([]);
     }
   }
 
@@ -277,859 +423,514 @@ function App() {
     setConvs([]);
     setAnswer(null);
     setQuery("");
-    setShowWorkspace(false);
   }
 
-  /* =========================================================
-     GLOBAL STYLES
-  ========================================================= */
-
   const globalStyles = `
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      background: #000;
-      color: ${cream};
-      font-family: Almarai, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    button, input {
-      font-family: inherit;
-    }
-
-    ::selection {
-      background: ${cream};
-      color: #000;
-    }
-
-    .grain {
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: #000; color: ${cream}; font-family: Almarai, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input { font-family: inherit; }
+    ::selection { background: ${cream}; color: #000; }
+    .grain { position: absolute; inset: 0; pointer-events: none; opacity: .08; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E"); mix-blend-mode: overlay; }
+    .serif { font-family: "Instrument Serif", Georgia, serif; font-style: italic; }
+    .glass { background: rgba(16,16,16,.72); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid ${border}; }
+    .hover-card { transition: transform .35s ease, border-color .35s ease, background .35s ease; }
+    .hover-card:hover { transform: translateY(-4px); border-color: rgba(225,224,204,.22); background: #171717; }
+    .sparkle-bg { position: relative; overflow: hidden; }
+    .sparkle-bg::before {
+      content: "";
       position: absolute;
       inset: 0;
       pointer-events: none;
-      opacity: .08;
+      z-index: 0;
+      opacity: .35;
       background-image:
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
-      mix-blend-mode: overlay;
+        radial-gradient(circle, rgba(225,224,204,.75) 1px, transparent 1.7px),
+        radial-gradient(circle, rgba(242,178,58,.55) 1px, transparent 1.8px);
+      background-size: 150px 150px, 230px 230px;
+      background-position: 15px 25px, 80px 100px;
     }
-
-    .serif {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-style: italic;
+    .sparkle-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: .18;
+      background-image: radial-gradient(circle, rgba(225,224,204,.9) 1px, transparent 2px);
+      background-size: 310px 310px;
+      animation: sparkleMove 14s linear infinite;
     }
-
-    .cream {
-      color: ${cream};
+    .sparkle-bg > * { position: relative; z-index: 1; }
+    @keyframes sparkleMove {
+      from { transform: translateY(0); }
+      to { transform: translateY(-310px); }
     }
-
-    .muted {
-      color: rgba(225,224,204,.55);
-    }
-
-    .glass {
-      background: rgba(16,16,16,.72);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid ${border};
-    }
-
-    .hover-card {
-      transition: transform .35s ease, border-color .35s ease, background .35s ease;
-    }
-
-    .hover-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(225,224,204,.22);
-      background: #171717;
-    }
-
-    @media(max-width: 768px) {
-      .desktop-only {
-        display: none !important;
-      }
-    }
-
-    @media(min-width: 769px) {
-      .mobile-only {
-        display: none !important;
-      }
-    }
+    @media(max-width: 768px) { .desktop-only { display: none !important; } }
+    @media(min-width: 769px) { .mobile-only { display: none !important; } }
   `;
 
-  /* =========================================================
-     LANDING PAGE
-  ========================================================= */
-
-  if (!showWorkspace && !token) {
+  if (!token) {
     return (
       <>
         <style>{globalStyles}</style>
-
-        <main style={{ background: "#000" }}>
-          {/* ================= HERO ================= */}
-
-          <section
-            style={{
-              minHeight: "100vh",
-              padding: "16px",
-              position: "relative",
-            }}
-          >
-            <div
-              style={{
-                position: "relative",
-                minHeight: "calc(100vh - 32px)",
-                overflow: "hidden",
-                borderRadius: 32,
-                background:
-                  "radial-gradient(circle at 70% 30%, #4a4131 0%, #16130f 40%, #050505 80%)",
-              }}
-            >
-              {/* cinematic abstract background */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(135deg, #17130e 0%, #493a28 35%, #100f0c 70%, #000 100%)",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  width: 600,
-                  height: 600,
-                  borderRadius: "50%",
-                  right: "-10%",
-                  top: "10%",
-                  background:
-                    "radial-gradient(circle, rgba(190,145,78,.34), transparent 65%)",
-                  filter: "blur(20px)",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  width: 400,
-                  height: 400,
-                  borderRadius: "50%",
-                  left: "-10%",
-                  bottom: "-10%",
-                  background:
-                    "radial-gradient(circle, rgba(100,85,60,.25), transparent 65%)",
-                  filter: "blur(30px)",
-                }}
-              />
-
-              <div className="grain" />
-
-              {/* NAVBAR */}
-
-              <nav
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  zIndex: 10,
-                  background: "#000",
-                  padding: "14px 28px",
-                  borderRadius: "0 0 24px 24px",
-                  display: "flex",
-                  gap: 30,
-                  alignItems: "center",
-                  whiteSpace: "nowrap",
-                }}
-                className="desktop-only"
-              >
-                <a href="#about" style={navLink}>
-                  How it works
-                </a>
-                <a href="#features" style={navLink}>
-                  AI features
-                </a>
-                <a href="#workspace" style={navLink}>
-                  Workspace
-                </a>
-                <button
-                  onClick={() => setShowAuth(true)}
-                  style={{
-                    ...navLink,
-                    border: "none",
-                    background: "transparent",
-                    cursor: "pointer",
-                  }}
-                >
-                  Login
-                </button>
-              </nav>
-
-              {/* mobile nav */}
-
-              <button
-                onClick={() => setMobileMenu(!mobileMenu)}
-                className="mobile-only"
-                style={{
-                  position: "absolute",
-                  right: 18,
-                  top: 18,
-                  zIndex: 20,
-                  border: "1px solid rgba(255,255,255,.15)",
-                  background: "rgba(0,0,0,.7)",
-                  color: cream,
-                  borderRadius: 999,
-                  width: 44,
-                  height: 44,
-                }}
-              >
-                {mobileMenu ? <X size={20} /> : <Menu size={20} />}
-              </button>
-
-              {/* HERO CONTENT */}
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  padding: "clamp(30px, 6vw, 80px)",
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 2fr) minmax(280px, 1fr)",
-                  gap: 40,
-                  alignItems: "end",
-                }}
-              >
-                <div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, ease }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "clamp(70px, 18vw, 260px)",
-                        lineHeight: ".75",
-                        letterSpacing: "-.08em",
-                        fontWeight: 400,
-                        color: cream,
-                      }}
-                    >
-                      NEXUS<span className="serif">*</span>
-                    </div>
-                  </motion.div>
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 25 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: .8, delay: .4, ease }}
-                  style={{ maxWidth: 440 }}
-                >
-                  <p
-                    style={{
-                      fontSize: "clamp(14px, 1.5vw, 18px)",
-                      lineHeight: 1.35,
-                      color: "rgba(225,224,204,.72)",
-                      marginBottom: 24,
-                    }}
-                  >
-                    Your intelligent document workspace.
-                    <br />
-                    Understand more. Create better.
-                  </p>
-
-                  <button
-                    onClick={() => setShowAuth(true)}
-                    style={primaryButton}
-                  >
-                    Enter Workspace
-                    <span style={buttonCircle}>
-                      <ArrowRight size={18} />
-                    </span>
-                  </button>
-                </motion.div>
-              </div>
-            </div>
-          </section>
-
-          {/* ================= HOW IT WORKS ================= */}
-
-          <section
-            id="about"
-            style={{
-              padding: "140px 6vw",
-              background: "#000",
-            }}
-          >
-            <Reveal>
-              <div style={smallLabel}>HOW NEXUS WORKS</div>
-
-              <h2
-                style={{
-                  fontSize: "clamp(42px, 7vw, 100px)",
-                  fontWeight: 400,
-                  letterSpacing: "-.06em",
-                  lineHeight: .9,
-                  maxWidth: 900,
-                  margin: "20px 0 25px",
-                }}
-              >
-                From documents
-                <br />
-                <span className="serif">to answers.</span>
-              </h2>
-
-              <p
-                style={{
-                  maxWidth: 560,
-                  color: "rgba(225,224,204,.55)",
-                  fontSize: 16,
-                  lineHeight: 1.5,
-                }}
-              >
-                A simple pipeline transforms your PDFs into searchable
-                knowledge and gives you grounded answers using AI.
-              </p>
-            </Reveal>
-
-            <div
-              style={{
-                marginTop: 80,
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-                gap: 1,
-                background: border,
-              }}
-            >
-              {[
-                [Upload, "01", "Upload", "Add your PDF documents."],
-                [FileText, "02", "Extract", "Read and process document text."],
-                [Database, "03", "Embed", "Convert content into vectors."],
-                [Search, "04", "Search", "Find the most relevant chunks."],
-                [Brain, "05", "Answer", "Generate a grounded response."],
-              ].map(([Icon, number, title, description]: any, index) => (
-                <Reveal key={title} delay={index * .08}>
-                  <div
-                    className="hover-card"
-                    style={{
-                      minHeight: 250,
-                      background: darkCard,
-                      padding: 28,
-                      border: `1px solid ${border}`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        color: "rgba(225,224,204,.35)",
-                        fontSize: 12,
-                      }}
-                    >
-                      <span>{number}</span>
-                      <Icon size={20} color={cream} strokeWidth={1.4} />
-                    </div>
-
-                    <div style={{ marginTop: 80 }}>
-                      <h3
-                        style={{
-                          fontSize: 22,
-                          fontWeight: 400,
-                          margin: 0,
-                        }}
-                      >
-                        {title}
-                      </h3>
-
-                      <p
-                        style={{
-                          color: "rgba(225,224,204,.45)",
-                          fontSize: 13,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {description}
-                      </p>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* ================= FEATURES ================= */}
-
-          <section
-            id="features"
-            style={{
-              minHeight: "100vh",
-              padding: "100px 6vw 140px",
-              background: "#050505",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <div className="grain" />
-
-            <Reveal>
-              <div style={smallLabel}>AI FEATURES</div>
-
-              <h2
-                style={{
-                  fontSize: "clamp(42px, 7vw, 100px)",
-                  fontWeight: 400,
-                  letterSpacing: "-.06em",
-                  lineHeight: .9,
-                  margin: "20px 0 80px",
-                }}
-              >
-                Intelligent.
-                <br />
-                <span style={{ color: "rgba(225,224,204,.35)" }}>
-                  Grounded. Personal.
-                </span>
-              </h2>
-            </Reveal>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                gap: 12,
-              }}
-            >
-              {/* SOURCE GROUNDING */}
-
-              <Reveal>
-                <FeatureCard
-                  number="01"
-                  icon={<Search size={23} />}
-                  title="Source Grounding"
-                  description="Every answer is backed by relevant document sources so you can verify the information."
-                >
-                  <div style={miniSource}>
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <FileText size={18} />
-                      <div>
-                        <div style={{ fontSize: 13 }}>Komal Resume</div>
-                        <div style={{ fontSize: 10, opacity: .4 }}>
-                          Chunk 92 · Source
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 18,
-                        fontSize: 11,
-                        lineHeight: 1.5,
-                        opacity: .55,
-                      }}
-                    >
-                      "React, Node.js, MongoDB, Socket.io..."
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 15,
-                        fontSize: 11,
-                        color: "#9fbe8d",
-                      }}
-                    >
-                      75.9% similarity
-                    </div>
-                  </div>
-                </FeatureCard>
-              </Reveal>
-
-              {/* CONVERSATION HISTORY */}
-
-              <Reveal delay={.1}>
-                <FeatureCard
-                  number="02"
-                  icon={<MessageSquare size={23} />}
-                  title="Conversation History"
-                  description="Keep your previous conversations organized and return to questions you've already explored."
-                >
-                  <div style={miniConversation}>
-                    <div style={conversationRow}>
-                      <span>Resume projects</span>
-                      <ChevronRight size={14} />
-                    </div>
-
-                    <div style={conversationRow}>
-                      <span>Technical skills</span>
-                      <ChevronRight size={14} />
-                    </div>
-
-                    <div style={conversationRow}>
-                      <span>My experience</span>
-                      <ChevronRight size={14} />
-                    </div>
-                  </div>
-                </FeatureCard>
-              </Reveal>
-
-              {/* PRIVATE */}
-
-              <Reveal delay={.2}>
-                <FeatureCard
-                  number="03"
-                  icon={<Lock size={23} />}
-                  title="Secure & Private"
-                  description="Documents and conversations are tied to authenticated users and protected by ownership checks."
-                >
-                  <div
-                    style={{
-                      height: 145,
-                      borderRadius: 16,
-                      background:
-                        "radial-gradient(circle at 50% 45%, rgba(225,224,204,.15), transparent 55%)",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 70,
-                        height: 70,
-                        borderRadius: "50%",
-                        border: "1px solid rgba(225,224,204,.25)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Lock size={27} strokeWidth={1.3} />
-                    </div>
-                  </div>
-                </FeatureCard>
-              </Reveal>
-            </div>
-          </section>
-
-          {/* AUTH MODAL */}
-
-          <AnimatePresence>
-            {showAuth && (
-              <AuthModal
-                email={email}
-                password={password}
-                setEmail={setEmail}
-                setPassword={setPassword}
-                login={login}
-                register={register}
-                close={() => setShowAuth(false)}
-              />
-            )}
-          </AnimatePresence>
-        </main>
+        <CursorBee />
+        <LoginPage
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          isRegister={isRegister}
+          setIsRegister={setIsRegister}
+          login={login}
+          register={register}
+        />
       </>
     );
   }
 
-  /* =========================================================
-     WORKSPACE
-  ========================================================= */
+  const time = new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
     <>
       <style>{globalStyles}</style>
-
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#000",
-          display: "flex",
-          color: cream,
-        }}
-      >
-        {/* SIDEBAR */}
-
-        <aside
-          className="desktop-only"
-          style={{
-            width: 260,
-            minHeight: "100vh",
-            padding: 24,
-            borderRight: `1px solid ${border}`,
-            background: "#070707",
-            display: "flex",
-            flexDirection: "column",
-          }}
+      <CursorBee />
+      <main style={{ background: "#000" }}>
+        {/* ================= HERO ================= */}
+        <section
+          style={{ minHeight: "100vh", padding: 16, position: "relative" }}
         >
           <div
             style={{
-              fontSize: 27,
-              letterSpacing: "-.07em",
-              marginBottom: 55,
+              position: "relative",
+              minHeight: "calc(100vh - 32px)",
+              overflow: "hidden",
+              borderRadius: 32,
+              backgroundImage:
+                "linear-gradient(90deg, rgba(0,0,0,.9) 0%, rgba(0,0,0,.45) 45%, rgba(0,0,0,.15) 100%), url('/nexus-hero.jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
             }}
           >
-            NEXUS<span className="serif">*</span>
-          </div>
+            <div className="grain" />
 
-          <button
-            onClick={() => {
-              setAnswer(null);
-              setQuery("");
-            }}
-            style={sidebarButton(true)}
-          >
-            <Plus size={17} />
-            New Chat
-          </button>
-
-          <div style={sideTitle}>CONVERSATIONS</div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-            }}
-          >
-            {convs.slice(0, 6).map((c) => (
-              <div key={c.id} style={conversationItem}>
-                <MessageSquare size={14} />
-                <span>{c.title || `Conversation ${c.id}`}</span>
-              </div>
-            ))}
-
-            {convs.length === 0 && (
-              <div style={emptySide}>No conversations yet</div>
-            )}
-          </div>
-
-          <div style={sideTitle}>DOCUMENTS</div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-            }}
-          >
-            {docs.slice(0, 5).map((d) => (
-              <div key={d.id} style={conversationItem}>
-                <FileText size={14} />
-                <span>{d.filename}</span>
-              </div>
-            ))}
-
-            {docs.length === 0 && (
-              <div style={emptySide}>No documents yet</div>
-            )}
-          </div>
-
-          <div style={{ marginTop: "auto" }}>
-            <button
-              onClick={logout}
+            <nav
+              className="desktop-only"
               style={{
-                ...sidebarButton(false),
-                color: "rgba(225,224,204,.55)",
+                position: "absolute",
+                top: 0,
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 10,
+                background: "#000",
+                padding: "14px 28px",
+                borderRadius: "0 0 24px 24px",
+                display: "flex",
+                gap: 30,
+                alignItems: "center",
+                whiteSpace: "nowrap",
               }}
             >
-              <LogOut size={16} />
-              Logout
-            </button>
-          </div>
-        </aside>
-
-        {/* MOBILE TOP BAR */}
-
-        <div
-          className="mobile-only"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 68,
-            zIndex: 30,
-            background: "rgba(0,0,0,.88)",
-            backdropFilter: "blur(20px)",
-            borderBottom: `1px solid ${border}`,
-            padding: "0 18px",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ fontSize: 24 }}>
-            NEXUS<span className="serif">*</span>
-          </div>
-
-          <button
-            onClick={logout}
-            style={{
-              background: "transparent",
-              border: 0,
-              color: cream,
-            }}
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
-
-        {/* MAIN */}
-
-        <main
-          style={{
-            flex: 1,
-            minWidth: 0,
-            padding: "clamp(90px, 7vw, 70px) clamp(18px, 5vw, 70px) 50px",
-          }}
-        >
-          {/* HEADER */}
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              gap: 20,
-              marginBottom: 50,
-            }}
-          >
-            <div>
-              <div style={smallLabel}>YOUR WORKSPACE</div>
-
-              <h1
-                style={{
-                  fontSize: "clamp(42px, 6vw, 82px)",
-                  fontWeight: 400,
-                  letterSpacing: "-.06em",
-                  lineHeight: .9,
-                  margin: "12px 0 0",
-                }}
-              >
-                Ask your
-                <br />
-                <span className="serif">documents.</span>
-              </h1>
-            </div>
+              <a href="#workspace" style={navLink}>
+                Home
+              </a>
+              <a href="#how" style={navLink}>
+                How it Works
+              </a>
+              <a href="#workspace" style={navLink}>
+                AI Features
+              </a>
+              <a href="#" style={navLink}>
+                Docs
+              </a>
+              <a href="#" style={navLink}>
+                Pricing
+              </a>
+              <a href="#" style={navLink}>
+                Contact
+              </a>
+            </nav>
 
             <button
-              onClick={() => {
-                const input = document.getElementById(
-                  "pdf-input",
-                ) as HTMLInputElement | null;
-
-                input?.click();
+              onClick={() => setMobileMenu(!mobileMenu)}
+              className="mobile-only"
+              style={{
+                position: "absolute",
+                right: 18,
+                top: 18,
+                zIndex: 20,
+                border: "1px solid rgba(255,255,255,.15)",
+                background: "rgba(0,0,0,.7)",
+                color: cream,
+                borderRadius: 999,
+                width: 44,
+                height: 44,
               }}
-              style={primaryButton}
             >
-              <Upload size={17} />
-              Add Document
+              {mobileMenu ? <X size={20} /> : <Menu size={20} />}
             </button>
-          </div>
-
-          {/* UPLOAD AREA */}
-
-          <div
-            className="glass"
-            style={{
-              borderRadius: 24,
-              padding: 24,
-              marginBottom: 35,
-            }}
-          >
-            <input
-              id="pdf-input"
-              type="file"
-              accept="application/pdf"
-              style={{ display: "none" }}
-              onChange={(e) =>
-                setFile(e.target.files?.[0] || null)
-              }
-            />
 
             <div
               style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                padding: "clamp(30px, 6vw, 80px)",
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 2fr) minmax(280px, 1fr)",
+                gap: 40,
+                alignItems: "end",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "clamp(70px, 18vw, 260px)",
+                    lineHeight: ".75",
+                    letterSpacing: "-.08em",
+                    fontWeight: 400,
+                  }}
+                >
+                  NEXUS<span className="serif">*</span>
+                </div>
+              </div>
+              <div style={{ maxWidth: 440 }}>
+                <p
+                  style={{
+                    fontSize: "clamp(14px, 1.5vw, 18px)",
+                    lineHeight: 1.35,
+                    color: "rgba(225,224,204,.72)",
+                    marginBottom: 24,
+                  }}
+                >
+                  Your intelligent document workspace.
+                  <br />
+                  Understand more. Create better.
+                </p>
+                <a
+                  href="#workspace"
+                  style={{ ...primaryButton, textDecoration: "none" }}
+                >
+                  Enter Workspace
+                  <span style={buttonCircle}>
+                    <ArrowRight size={18} />
+                  </span>
+                </a>
+              </div>
+            </div>
+
+            <div
+              className="glass desktop-only"
+              style={{
+                position: "absolute",
+                right: "clamp(24px,5vw,70px)",
+                bottom: 200,
+                borderRadius: 18,
+                padding: "16px 20px",
+                maxWidth: 260,
+                fontSize: 13,
+                lineHeight: 1.6,
+              }}
+            >
+              Ask anything.
+              <br />
+              Get grounded answers.
+              <br />
+              From your documents.
+            </div>
+          </div>
+        </section>
+
+        {/* ================= HOW IT WORKS ================= */}
+        <section
+          id="how"
+          className="sparkle-bg"
+          style={{
+            padding: "100px 6vw",
+            background: "#000",
+            textAlign: "center",
+          }}
+        >
+          <div style={smallLabel}>HOW NEXUS WORKS</div>
+          <h2
+            style={{
+              fontSize: "clamp(32px, 5vw, 56px)",
+              fontWeight: 400,
+              letterSpacing: "-.05em",
+              margin: "16px 0 60px",
+            }}
+          >
+            How Nexus Works
+          </h2>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+              gap: 6,
+            }}
+          >
+            {[
+              [
+                Upload,
+                "Upload",
+                "Upload your PDFs and other documents to get started.",
+              ],
+              [
+                FileText,
+                "Extract",
+                "We extract text and split it into manageable chunks.",
+              ],
+              [
+                Database,
+                "Embed",
+                "Chunks are converted into embeddings and stored in a vector DB.",
+              ],
+              [
+                Search,
+                "Search",
+                "We find the most relevant chunks for your question.",
+              ],
+              [
+                Brain,
+                "Answer",
+                "AI generates accurate, grounded answers with sources.",
+              ],
+            ].map(([Icon, title, desc]: any, i) => (
+              <React.Fragment key={title}>
+                <div style={{ maxWidth: 160, textAlign: "center" }}>
+                  <div style={stepCircle}>
+                    <Icon size={22} strokeWidth={1.4} />
+                  </div>
+                  <h4
+                    style={{ fontSize: 16, fontWeight: 500, margin: "0 0 6px" }}
+                  >
+                    {title}
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "rgba(225,224,204,.45)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {desc}
+                  </p>
+                </div>
+                {i < 4 && (
+                  <ChevronRight style={{ marginTop: 20, opacity: 0.25 }} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </section>
+
+        {/* ================= WORKSPACE ================= */}
+        <section
+          id="workspace"
+          style={{ padding: "0 6vw 60px", display: "flex", gap: 15 }}
+        >
+          <aside
+            className="desktop-only"
+            style={{
+              width: 250,
+              background: "#070707",
+              border: `1px solid ${border}`,
+              borderRadius: 24,
+              padding: 22,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 24,
+                letterSpacing: "-.06em",
+                marginBottom: 30,
+              }}
+            >
+              NEXUS<span className="serif">*</span>
+            </div>
+            <button
+              onClick={() => {
+                setAnswer(null);
+                setQuery("");
+              }}
+              style={sidebarButton(true)}
+            >
+              <Plus size={17} />
+              New Chat
+            </button>
+
+            <div style={sideTitle}>CONVERSATIONS</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              {convs.slice(0, 6).map((c) => (
+                <div key={c.id} style={conversationItem}>
+                  <MessageSquare size={14} />
+                  <span>{c.title || `Conversation ${c.id}`}</span>
+                </div>
+              ))}
+              {convs.length === 0 && (
+                <div style={emptySide}>No conversations yet</div>
+              )}
+            </div>
+
+            <div style={sideTitle}>DOCUMENTS</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              {docs.slice(0, 5).map((d) => (
+                <div key={d.id} style={conversationItem}>
+                  <FileText size={14} />
+                  <span>{d.filename}</span>
+                </div>
+              ))}
+              {docs.length === 0 && (
+                <div style={emptySide}>No documents yet</div>
+              )}
+            </div>
+
+            <div style={sideTitle}>SETTINGS</div>
+            <div style={conversationItem}>
+              <Settings size={14} />
+              Settings
+            </div>
+            <div
+              style={{ ...conversationItem, cursor: "pointer" }}
+              onClick={logout}
+            >
+              <LogOut size={14} />
+              Log out
+            </div>
+
+            <div
+              style={{
+                marginTop: "auto",
                 display: "flex",
                 alignItems: "center",
-                gap: 15,
-                flexWrap: "wrap",
+                gap: 10,
+                padding: "12px 8px",
+                borderTop: `1px solid ${border}`,
               }}
             >
               <div
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 14,
-                  background: "#212121",
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: cream,
+                  color: "#000",
                   display: "flex",
-                  justifyContent: "center",
                   alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  flexShrink: 0,
                 }}
               >
-                <Paperclip size={20} />
+                {(email || "U")[0].toUpperCase()}
               </div>
-
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ fontSize: 14 }}>
-                  {file ? file.name : "Add a PDF to your workspace"}
-                </div>
-
+              <div style={{ fontSize: 11, overflow: "hidden" }}>
                 <div
                   style={{
-                    color: "rgba(225,224,204,.4)",
-                    fontSize: 11,
-                    marginTop: 4,
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
                   }}
                 >
-                  {file
-                    ? "Ready to upload"
-                    : "Upload documents to ask questions about them"}
+                  {email ? email.split("@")[0] : "User"}
+                </div>
+                <div
+                  style={{
+                    opacity: 0.4,
+                    fontSize: 9,
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                  }}
+                >
+                  {email}
                 </div>
               </div>
-
-              {file && (
-                <button
-                  onClick={upload}
-                  disabled={uploading}
-                  style={{
-                    ...primaryButton,
-                    opacity: uploading ? .5 : 1,
-                  }}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
-                  {!uploading && <ArrowRight size={16} />}
-                </button>
-              )}
             </div>
-          </div>
-
-          {/* CHAT */}
+          </aside>
 
           <div
+            className="mobile-only"
             style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 68,
+              zIndex: 30,
+              background: "rgba(0,0,0,.88)",
+              backdropFilter: "blur(20px)",
+              borderBottom: `1px solid ${border}`,
+              padding: "0 18px",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ fontSize: 24 }}>
+              NEXUS<span className="serif">*</span>
+            </div>
+            <button
+              onClick={logout}
+              style={{ background: "transparent", border: 0, color: cream }}
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+
+          <section
+            style={{
+              flex: 1,
+              minWidth: 0,
               display: "grid",
               gridTemplateColumns: "minmax(0, 1fr) 300px",
               gap: 15,
             }}
           >
-            <section
+            <div
               style={{
                 minWidth: 0,
                 minHeight: 560,
                 background: darkCard,
                 border: `1px solid ${border}`,
                 borderRadius: 28,
-                padding: "clamp(20px, 3vw, 35px)",
+                padding: "clamp(20px, 3vw, 30px)",
                 display: "flex",
                 flexDirection: "column",
               }}
             >
+              {answer && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 20,
+                    borderBottom: `1px solid ${border}`,
+                    paddingBottom: 16,
+                  }}
+                >
+                  <ArrowLeft
+                    size={16}
+                    style={{ cursor: "pointer", opacity: 0.6 }}
+                    onClick={() => {
+                      setAnswer(null);
+                      setQuery("");
+                    }}
+                  />
+                  <span style={{ fontSize: 14, flex: 1 }}>{query}</span>
+                  <MoreHorizontal size={16} style={{ opacity: 0.5 }} />
+                </div>
+              )}
+
               {!answer && (
                 <div
                   style={{
@@ -1158,17 +959,9 @@ function App() {
                     >
                       <Sparkles size={24} />
                     </div>
-
-                    <h2
-                      style={{
-                        fontWeight: 400,
-                        fontSize: 25,
-                        margin: 0,
-                      }}
-                    >
+                    <h2 style={{ fontWeight: 400, fontSize: 25, margin: 0 }}>
                       Ask anything.
                     </h2>
-
                     <p
                       style={{
                         color: "rgba(225,224,204,.4)",
@@ -1177,8 +970,8 @@ function App() {
                         lineHeight: 1.5,
                       }}
                     >
-                      Ask a question about the information contained in
-                      your uploaded documents.
+                      Ask a question about the information contained in your
+                      uploaded documents.
                     </p>
                   </div>
                 </div>
@@ -1188,29 +981,103 @@ function App() {
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  style={{ flex: 1 }}
+                  style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 22,
+                  }}
                 >
-                  <div style={smallLabel}>AI RESPONSE</div>
-
-                  <div
-                    style={{
-                      marginTop: 20,
-                      fontSize: "clamp(17px, 2vw, 22px)",
-                      lineHeight: 1.5,
-                      color: cream,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {answer.answer || "No answer returned."}
+                  <div style={{ alignSelf: "flex-end", maxWidth: "75%" }}>
+                    <div
+                      style={{
+                        background: cream,
+                        color: "#000",
+                        padding: "12px 16px",
+                        borderRadius: "16px 16px 4px 16px",
+                        fontSize: 13,
+                      }}
+                    >
+                      {query}
+                    </div>
+                    <div
+                      style={{
+                        textAlign: "right",
+                        fontSize: 9,
+                        opacity: 0.35,
+                        marginTop: 4,
+                      }}
+                    >
+                      {time}
+                    </div>
+                  </div>
+                  <div style={{ maxWidth: "88%" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: "50%",
+                          border: `1px solid ${border}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Sparkles size={13} />
+                      </div>
+                      <span style={{ fontSize: 11, opacity: 0.6 }}>
+                        Nexus AI
+                      </span>
+                      <span style={{ fontSize: 9, opacity: 0.3 }}>{time}</span>
+                    </div>
+                    <div
+                      style={{
+                        background: lighterCard,
+                        border: `1px solid ${border}`,
+                        borderRadius: "4px 16px 16px 16px",
+                        padding: "16px 18px",
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {answer.answer || "No answer returned."}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 14,
+                        marginTop: 10,
+                        opacity: 0.4,
+                      }}
+                    >
+                      <Copy
+                        size={14}
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          navigator.clipboard.writeText(answer.answer || "")
+                        }
+                      />
+                      <ThumbsUp size={14} />
+                      <ThumbsDown size={14} />
+                      <RotateCcw size={14} />
+                    </div>
                   </div>
                 </motion.div>
               )}
 
-              {/* INPUT */}
-
               <div
                 style={{
-                  marginTop: 30,
+                  marginTop: 24,
                   display: "flex",
                   gap: 8,
                   padding: 7,
@@ -1219,14 +1086,21 @@ function App() {
                   border: `1px solid ${border}`,
                 }}
               >
+                <input
+                  id="pdf-input-hidden"
+                  type="file"
+                  accept="application/pdf"
+                  style={{ display: "none" }}
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                />
                 <button
-                  onClick={() => {
-                    const input = document.getElementById(
-                      "pdf-input",
-                    ) as HTMLInputElement | null;
-
-                    input?.click();
-                  }}
+                  onClick={() =>
+                    (
+                      document.getElementById(
+                        "pdf-input-hidden",
+                      ) as HTMLInputElement
+                    )?.click()
+                  }
                   style={{
                     width: 43,
                     height: 43,
@@ -1240,7 +1114,6 @@ function App() {
                 >
                   <Paperclip size={18} />
                 </button>
-
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -1258,7 +1131,6 @@ function App() {
                     fontSize: 13,
                   }}
                 />
-
                 <button
                   onClick={() => ask()}
                   disabled={loading}
@@ -1274,7 +1146,7 @@ function App() {
                     justifyContent: "center",
                     cursor: "pointer",
                     flexShrink: 0,
-                    opacity: loading ? .5 : 1,
+                    opacity: loading ? 0.5 : 1,
                   }}
                 >
                   {loading ? (
@@ -1284,11 +1156,10 @@ function App() {
                   )}
                 </button>
               </div>
-            </section>
-
-            {/* SOURCES */}
+            </div>
 
             <aside
+              className="desktop-only"
               style={{
                 background: darkCard,
                 border: `1px solid ${border}`,
@@ -1296,10 +1167,8 @@ function App() {
                 padding: 24,
                 minHeight: 560,
               }}
-              className="desktop-only"
             >
               <div style={smallLabel}>SOURCES</div>
-
               {!answer?.sources?.length ? (
                 <div
                   style={{
@@ -1325,10 +1194,7 @@ function App() {
                       key={`${source.chunk_id}-${index}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: index * .07,
-                        ease,
-                      }}
+                      transition={{ delay: index * 0.07, ease }}
                       style={{
                         background: lighterCard,
                         border: `1px solid ${border}`,
@@ -1344,7 +1210,6 @@ function App() {
                         }}
                       >
                         <FileText size={16} />
-
                         <div
                           style={{
                             fontSize: 11,
@@ -1356,7 +1221,6 @@ function App() {
                           Document {source.document_id}
                         </div>
                       </div>
-
                       <div
                         style={{
                           color: "rgba(225,224,204,.4)",
@@ -1369,7 +1233,6 @@ function App() {
                           ? ` · Page ${source.page_number}`
                           : ""}
                       </div>
-
                       <p
                         style={{
                           fontSize: 10,
@@ -1381,380 +1244,205 @@ function App() {
                         {source.content?.slice(0, 130)}
                         {source.content?.length > 130 ? "..." : ""}
                       </p>
-
                       <div
                         style={{
                           color: "#9fbe8d",
                           fontSize: 9,
+                          marginBottom: 5,
                         }}
                       >
                         {source.similarity
                           ? `${(source.similarity * 100).toFixed(1)}% match`
                           : "Source"}
                       </div>
+                      <div
+                        style={{
+                          height: 3,
+                          borderRadius: 2,
+                          background: "rgba(225,224,204,.1)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: "100%",
+                            width: `${Math.min(100, (source.similarity || 0) * 100)}%`,
+                            borderRadius: 2,
+                            background: "#9fbe8d",
+                          }}
+                        />
+                      </div>
                     </motion.div>
                   ))}
                 </div>
               )}
             </aside>
+          </section>
+        </section>
+
+        {/* ================= DOCUMENTS ================= */}
+        <section style={{ padding: "0 6vw 100px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 20,
+            }}
+          >
+            <div>
+              <div style={smallLabel}>MY DOCUMENTS</div>
+              <h2 style={{ fontSize: 28, fontWeight: 400, margin: "8px 0 0" }}>
+                Your knowledge base
+              </h2>
+            </div>
+            <button
+              onClick={() =>
+                (
+                  document.getElementById(
+                    "pdf-input-hidden",
+                  ) as HTMLInputElement
+                )?.click()
+              }
+              style={{ ...primaryButton, padding: "9px 16px" }}
+            >
+              <Upload size={15} />
+              Upload Document
+            </button>
           </div>
 
-          {/* DOCUMENTS */}
-
-          <section
+          <div
             style={{
-              marginTop: 60,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 10,
             }}
           >
             <div
+              onClick={() =>
+                (
+                  document.getElementById(
+                    "pdf-input-hidden",
+                  ) as HTMLInputElement
+                )?.click()
+              }
               style={{
+                border: `1px dashed rgba(225,224,204,.25)`,
+                borderRadius: 20,
+                padding: 20,
                 display: "flex",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 alignItems: "center",
-                marginBottom: 20,
+                justifyContent: "center",
+                textAlign: "center",
+                cursor: "pointer",
+                minHeight: 150,
               }}
             >
-              <div>
-                <div style={smallLabel}>MY DOCUMENTS</div>
-
-                <h2
+              <Upload size={20} style={{ opacity: 0.5, marginBottom: 10 }} />
+              <div style={{ fontSize: 13 }}>Add a document</div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: "rgba(225,224,204,.4)",
+                  marginTop: 4,
+                }}
+              >
+                Drop your PDF here or browse
+              </div>
+              {file && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    upload();
+                  }}
+                  disabled={uploading}
                   style={{
-                    fontSize: 28,
-                    fontWeight: 400,
-                    margin: "8px 0 0",
+                    ...primaryButton,
+                    marginTop: 12,
+                    padding: "6px 14px",
+                    fontSize: 11,
                   }}
                 >
-                  Your knowledge base
-                </h2>
-              </div>
-
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "rgba(225,224,204,.35)",
-                }}
-              >
-                {docs.length} documents
-              </span>
+                  {uploading ? "Uploading..." : `Upload ${file.name}`}
+                </button>
+              )}
             </div>
 
-            {docs.length === 0 ? (
-              <div
-                className="glass"
+            {docs.map((doc) => (
+              <motion.div
+                key={doc.id}
+                whileHover={{ y: -4 }}
                 style={{
-                  borderRadius: 22,
-                  padding: 40,
-                  textAlign: "center",
+                  background: darkCard,
+                  border: `1px solid ${border}`,
+                  borderRadius: 20,
+                  padding: 20,
+                  position: "relative",
                 }}
               >
-                <FileText
-                  size={28}
-                  style={{ opacity: .5, marginBottom: 10 }}
-                />
-
-                <div style={{ fontSize: 14 }}>
-                  No documents uploaded yet.
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                {docs.map((doc) => (
-                  <motion.div
-                    key={doc.id}
-                    whileHover={{ y: -4 }}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <span
                     style={{
-                      background: darkCard,
-                      border: `1px solid ${border}`,
-                      borderRadius: 20,
-                      padding: 20,
+                      background: "#7a2a2a",
+                      color: cream,
+                      fontSize: 9,
+                      fontWeight: 700,
+                      padding: "3px 7px",
+                      borderRadius: 5,
                     }}
                   >
-                    <FileText size={22} />
-
-                    <div
-                      style={{
-                        marginTop: 40,
-                        fontSize: 13,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {doc.filename}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 7,
-                        fontSize: 10,
-                        color: "rgba(225,224,204,.35)",
-                      }}
-                    >
-                      Document #{doc.id}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </section>
-        </main>
-      </div>
+                    PDF
+                  </span>
+                  <FileText size={18} style={{ opacity: 0.6 }} />
+                </div>
+                <div
+                  style={{
+                    marginTop: 30,
+                    fontSize: 13,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {doc.filename}
+                </div>
+                <div style={{ marginTop: 5, fontSize: 10, color: "#9fbe8d" }}>
+                  Processed
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    marginTop: 14,
+                    opacity: 0.4,
+                  }}
+                >
+                  <Eye size={13} />
+                  <MoreHorizontal size={13} />
+                  <Trash2 size={13} />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      </main>
     </>
   );
 }
 
-/* =========================================================
-   FEATURE CARD
-========================================================= */
-
-function FeatureCard({
-  number,
-  icon,
-  title,
-  description,
-  children,
-}: {
-  number: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className="hover-card"
-      style={{
-        background: "#101010",
-        border: `1px solid ${border}`,
-        borderRadius: 24,
-        padding: 25,
-        minHeight: 430,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 13,
-            background: "#212121",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {icon}
-        </div>
-
-        <span
-          style={{
-            fontSize: 11,
-            color: "rgba(225,224,204,.35)",
-          }}
-        >
-          {number}
-        </span>
-      </div>
-
-      <div style={{ marginTop: 45 }}>
-        <h3
-          style={{
-            fontSize: 25,
-            fontWeight: 400,
-            margin: 0,
-          }}
-        >
-          {title}
-        </h3>
-
-        <p
-          style={{
-            color: "rgba(225,224,204,.48)",
-            fontSize: 12,
-            lineHeight: 1.55,
-            maxWidth: 300,
-          }}
-        >
-          {description}
-        </p>
-      </div>
-
-      <div style={{ marginTop: 30 }}>{children}</div>
-
-      <div
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 22,
-          color: "rgba(225,224,204,.3)",
-        }}
-      >
-        <ArrowUpRight size={17} />
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   AUTH MODAL
-========================================================= */
-
-function AuthModal({
-  email,
-  password,
-  setEmail,
-  setPassword,
-  login,
-  register,
-  close,
-}: any) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(0,0,0,.75)",
-        backdropFilter: "blur(15px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: .95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: .45, ease }}
-        style={{
-          width: "100%",
-          maxWidth: 430,
-          background: "#101010",
-          border: `1px solid ${border}`,
-          borderRadius: 28,
-          padding: 30,
-          position: "relative",
-        }}
-      >
-        <button
-          onClick={close}
-          style={{
-            position: "absolute",
-            right: 18,
-            top: 18,
-            background: "transparent",
-            border: 0,
-            color: "rgba(225,224,204,.5)",
-            cursor: "pointer",
-          }}
-        >
-          <X size={18} />
-        </button>
-
-        <div style={smallLabel}>NEXUS*</div>
-
-        <h2
-          style={{
-            fontSize: 42,
-            fontWeight: 400,
-            letterSpacing: "-.06em",
-            margin: "20px 0 8px",
-          }}
-        >
-          Enter the
-          <br />
-          <span className="serif">workspace.</span>
-        </h2>
-
-        <p
-          style={{
-            color: "rgba(225,224,204,.4)",
-            fontSize: 12,
-            marginBottom: 25,
-          }}
-        >
-          Login or create an account to continue.
-        </p>
-
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={authInput}
-        />
-
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ ...authInput, marginTop: 9 }}
-        />
-
-        <button
-          onClick={login}
-          style={{
-            ...primaryButton,
-            width: "100%",
-            justifyContent: "space-between",
-            marginTop: 15,
-          }}
-        >
-          Login
-          <span style={buttonCircle}>
-            <ArrowRight size={16} />
-          </span>
-        </button>
-
-        <button
-          onClick={register}
-          style={{
-            width: "100%",
-            marginTop: 10,
-            padding: "14px 18px",
-            borderRadius: 999,
-            background: "transparent",
-            color: cream,
-            border: `1px solid ${border}`,
-            cursor: "pointer",
-          }}
-        >
-          Create account
-        </button>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/* =========================================================
-   STYLES
-========================================================= */
+/* ================= STYLES ================= */
 
 const navLink: React.CSSProperties = {
   color: "rgba(225,224,204,.75)",
   textDecoration: "none",
   fontSize: 11,
-  transition: "color .2s",
 };
-
 const primaryButton: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
@@ -1769,7 +1457,6 @@ const primaryButton: React.CSSProperties = {
   fontWeight: 600,
   cursor: "pointer",
 };
-
 const buttonCircle: React.CSSProperties = {
   width: 37,
   height: 37,
@@ -1780,22 +1467,25 @@ const buttonCircle: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
 };
-
 const smallLabel: React.CSSProperties = {
   fontSize: 10,
   letterSpacing: ".16em",
   color: cream,
   fontWeight: 700,
 };
-
+const fieldLabel: React.CSSProperties = {
+  fontSize: 10,
+  letterSpacing: ".12em",
+  color: "rgba(225,224,204,.45)",
+  marginBottom: 7,
+};
 const sideTitle: React.CSSProperties = {
-  marginTop: 35,
+  marginTop: 28,
   marginBottom: 10,
   fontSize: 9,
   letterSpacing: ".15em",
   color: "rgba(225,224,204,.28)",
 };
-
 const conversationItem: React.CSSProperties = {
   display: "flex",
   gap: 9,
@@ -1806,13 +1496,11 @@ const conversationItem: React.CSSProperties = {
   fontSize: 11,
   overflow: "hidden",
 };
-
 const emptySide: React.CSSProperties = {
   color: "rgba(225,224,204,.22)",
   fontSize: 10,
   padding: "5px 8px",
 };
-
 const sidebarButton = (active: boolean): React.CSSProperties => ({
   display: "flex",
   alignItems: "center",
@@ -1827,7 +1515,6 @@ const sidebarButton = (active: boolean): React.CSSProperties => ({
   textAlign: "left",
   fontSize: 11,
 });
-
 const authInput: React.CSSProperties = {
   width: "100%",
   padding: "14px 16px",
@@ -1838,30 +1525,16 @@ const authInput: React.CSSProperties = {
   outline: "none",
   fontSize: 12,
 };
-
-const miniSource: React.CSSProperties = {
-  padding: 16,
-  borderRadius: 16,
-  background: "#212121",
-  border: `1px solid ${border}`,
-};
-
-const miniConversation: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 6,
-};
-
-const conversationRow: React.CSSProperties = {
-  padding: "14px",
-  background: "#212121",
-  borderRadius: 12,
+const stepCircle: React.CSSProperties = {
+  width: 64,
+  height: 64,
+  borderRadius: "50%",
   border: `1px solid ${border}`,
   display: "flex",
-  justifyContent: "space-between",
   alignItems: "center",
-  fontSize: 11,
-  color: "rgba(225,224,204,.7)",
+  justifyContent: "center",
+  margin: "0 auto 16px",
+  background: "radial-gradient(circle, rgba(225,224,204,.08), transparent)",
 };
 
 createRoot(document.getElementById("root")!).render(<App />);

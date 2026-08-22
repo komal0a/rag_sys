@@ -1,0 +1,12 @@
+.venv/
+.venv311/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.git/
+.pytest_cache/
+storage/documents/
+dev.db
+*.db
